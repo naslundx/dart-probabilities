@@ -23,14 +23,14 @@ def rawValueFromAngle(angle):
 
 
 def cart2pol(x, y):
-    rho = math.sqrt(x ** 2 + y ** 2)
-    phi = math.atan2(y, x)
-    return (rho, phi)
+    radius = math.sqrt(x ** 2 + y ** 2)
+    angle = math.atan2(y, x)
+    return (radius, angle)
 
 
-def pol2cart(rho, phi):
-    x = rho * math.cos(phi)
-    y = rho * math.sin(phi)
+def pol2cart(radius, angle):
+    x = radius * math.cos(angle)
+    y = radius * math.sin(angle)
     return (x, y)
 
 
@@ -70,56 +70,66 @@ def probabilityAtPoint(x, y, radius, resolution_analysis):
     return points / count
 
 
-def scanBoard(inaccuracy, resolution_analysis, resolution_search):
+def scanBoard(inaccuracy, resolution_analysis, resolution_search, print_best, verbose):
     best_probability = 0
     board = []
 
     y = -BOARD_SIZE / 1.5
     while y <= BOARD_SIZE / 1.5:
-        print("{:.2f}%".format(100 * (y + BOARD_SIZE) / (BOARD_SIZE * 2)))
+        if verbose:
+            print("{:.2f}%".format(100 * (y + BOARD_SIZE) / (BOARD_SIZE * 2)))
         row = []
         x = -BOARD_SIZE / 1.5
         while x <= BOARD_SIZE / 1.5:
             probability = probabilityAtPoint(-y, x, inaccuracy, resolution_analysis)
             if probability > best_probability:
-                best_probability = probability
-                best_probability_index = value(-y, x)
-                best_prob_x = -y
-                best_prob_y = x
-                print(best_probability, best_probability_index)
+                best_probability, best_probability_index = probability, value(-y, x)
+                best_prob_x, best_prob_y = -y, x
+                if verbose:
+                    print(best_probability, best_probability_index)
             row.append(probability)
             x += resolution_search
         board.append(row)
         y += resolution_search
     
-    print("BEST TO AIM FOR: " + str(best_probability_index) + " at x=" + str(best_prob_x) + ", y=" + str(best_prob_y))
+    if print_best:
+        print("Best to aim for " + str(best_probability_index) + " at x=" + str(best_prob_x) + ", y=" + str(best_prob_y))
     return board
 
 
 def main():
-    # TODO arg for saving best found location
     # TODO arg for just trying one location or region (remove /1.5)
-    # TODO save image to file
-    # TODO regulate verbosity
     # TODO add gaussian filter for probabilities    
     parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument("--save", help="save data to file", action="store_true")
+    
+    parser.add_argument("--save_data", help="save data to file", action="store_true")
+    parser.add_argument("--save_image", help="save image to file", action="store_true")
     parser.add_argument("--noshow", help="do not open window", action="store_true")
+    parser.add_argument("--print_best", help="print best location found", action="store_true")
+    parser.add_argument("-v", "--verbose", help="be verbose during calculations", action="store_true")
+    
     parser.add_argument("--resolution_analysis", help="resolution (mm) in analysis", type=float, default=3.0)
     parser.add_argument("--resolution_search", help="resolution (mm) for search", type=float, default=3.0)
     parser.add_argument("--inaccuracy", help="radius of circular hit area (mm)", type=float, default=50)
+
     args = parser.parse_args()
 
-    result = scanBoard(args.inaccuracy, args.resolution_analysis, args.resolution_search)
+    result = scanBoard(args.inaccuracy, args.resolution_analysis, args.resolution_search, args.print_best, args.verbose)
     a = np.array(result)
-    if args.save:
-        filename = "result_" + str(inaccuracy) + ".txt"
-        np.savetxt(filename, a)
-        print("Saving to " + filename)
+    filename = "result_" + str(args.inaccuracy)
+    if args.save_data:
+        np.savetxt(filename + ".txt", a)
+        print("Saving to " + filename + ".txt")
+
+    plt.imshow(a, cmap='hot', interpolation='nearest')
+    plt.title("Heatmap probabilities, inaccuracy=" + str(args.inaccuracy))
+
+    if args.save_image:
+        plt.savefig(filename + ".png")
 
     if not args.noshow:
         print("Opening window...")
-        plt.imshow(a, cmap='hot', interpolation='nearest')
+        
         plt.show()
 
     return 0
