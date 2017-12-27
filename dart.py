@@ -57,14 +57,14 @@ def probabilityAtPoint(x, y, radius, resolution_analysis):
     while X <= x + radius:
         Y = y - radius
         while Y <= y + radius:
-            distance = math.sqrt((x - X) ** 2 + (y - Y) ** 2) 
+            distance = math.sqrt((x - X) ** 2 + (y - Y) ** 2)
             if distance < radius:
                 score = value(X, Y)
                 points += score
                 count += 1
                 if distance < radius / 2:
-                   points += score
-                   count += 1
+                    points += score
+                    count += 1
             Y += resolution_analysis
         X += resolution_analysis
     return points / count
@@ -91,7 +91,7 @@ def scanBoard(inaccuracy, resolution_analysis, resolution_search, print_best, ve
             x += resolution_search
         board.append(row)
         y += resolution_search
-    
+
     if print_best:
         print("Best to aim for " + str(best_probability_index) + " at x=" + str(best_prob_x) + ", y=" + str(best_prob_y))
     return board
@@ -99,15 +99,17 @@ def scanBoard(inaccuracy, resolution_analysis, resolution_search, print_best, ve
 
 def main():
     # TODO arg for just trying one location or region (remove /1.5)
-    # TODO add gaussian filter for probabilities    
+    # TODO add gaussian filter for probabilities
+    # TODO add docs + readme
+
     parser = argparse.ArgumentParser(description='Process some integers.')
-    
+
     parser.add_argument("--save_data", help="save data to file", action="store_true")
     parser.add_argument("--save_image", help="save image to file", action="store_true")
     parser.add_argument("--noshow", help="do not open window", action="store_true")
     parser.add_argument("--print_best", help="print best location found", action="store_true")
     parser.add_argument("-v", "--verbose", help="be verbose during calculations", action="store_true")
-    
+
     parser.add_argument("--resolution_analysis", help="resolution (mm) in analysis", type=float, default=3.0)
     parser.add_argument("--resolution_search", help="resolution (mm) for search", type=float, default=3.0)
     parser.add_argument("--inaccuracy", help="radius of circular hit area (mm)", type=float, default=50)
@@ -129,7 +131,6 @@ def main():
 
     if not args.noshow:
         print("Opening window...")
-        
         plt.show()
 
     return 0
